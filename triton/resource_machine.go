@@ -16,6 +16,7 @@ import (
 	"github.com/joyent/triton-go/compute"
 	"github.com/joyent/triton-go/errors"
 	"github.com/mitchellh/hashstructure"
+	"github.com/y0ssar1an/q"
 )
 
 const (
@@ -730,64 +731,44 @@ func resourceMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+		q.Q("Machine networks", nics)
 
 		oRaw, nRaw := d.GetChange("networks")
 		o := oRaw.([]interface{})
 		n := nRaw.([]interface{})
 
-		for _, new := range n {
-			var nicId string
-
-			for _, old := range o {
-				exists := false
-				nicId = old.(string)
-				if old.(string) == new.(string) {
-					exists = true
+		networksToRemove := differenceNetworks(o, n)
+		q.Q("networks to remove", networksToRemove)
+		for _, toRemove := range networksToRemove {
+			var macId string
+			for _, nic := range nics {
+				if nic.Network == toRemove {
+					macId = nic.MAC
 				}
-				if !exists {
-					var macId string
-					for _, nic := range nics {
-						if nic.Network == nicId {
-							macId = nic.MAC
-						}
-					}
+			}
 
-					log.Printf("[DEBUG] Removing NIC with MacId %s", macId)
-					_, err := retryOnError(errors.IsResourceFound, func() (interface{}, error) {
-						err := c.Instances().RemoveNIC(context.Background(), &compute.RemoveNICInput{
-							InstanceID: d.Id(),
-							MAC:        macId,
-						})
-						return nil, err
-					})
-					if err != nil {
-						return err
-					}
+			if macId != "" {
+				log.Printf("[DEBUG] Removing NIC with MacId %s", macId)
+				err := c.Instances().RemoveNIC(context.Background(), &compute.RemoveNICInput{
+					InstanceID: d.Id(),
+					MAC:        macId,
+				})
+				if err != nil {
+					return err
 				}
 			}
 		}
 
-		for _, old := range o {
-
-			for _, new := range n {
-				exists := false
-				if old.(string) == new.(string) {
-					exists = true
-				}
-				if !exists {
-
-					log.Printf("[DEBUG] Adding NIC with Network %s", new.(string))
-					_, err := retryOnError(errors.IsResourceFound, func() (interface{}, error) {
-						_, err := c.Instances().AddNIC(context.Background(), &compute.AddNICInput{
-							InstanceID: d.Id(),
-							Network:    new.(string),
-						})
-						return nil, err
-					})
-					if err != nil {
-						return err
-					}
-				}
+		networksToAdd := differenceNetworks(n, o)
+		q.Q("Going to add", networksToAdd)
+		for _, toAdd := range networksToAdd {
+			log.Printf("[DEBUG] Adding NIC with Network %s", toAdd)
+			_, err := c.Instances().AddNIC(context.Background(), &compute.AddNICInput{
+				InstanceID: d.Id(),
+				Network:    toAdd,
+			})
+			if err != nil {
+				return err
 			}
 		}
 
@@ -894,7 +875,7 @@ func resourceMachineDelete(d *schema.ResourceData, meta interface{}) error {
 				ID: d.Id(),
 			})
 			if err != nil {
-				if errors.IsResourceNotFound(err) {
+				if errors.IsSpecificStatusCode(err, http.StatusNotFound) || errors.IsSpecificStatusCode(err, http.StatusGone) {
 					return inst, "deleted", nil
 				}
 				return nil, "", err
@@ -1024,4 +1005,18 @@ func hasInitDomainNames(d *schema.ResourceData, inst *compute.Instance) bool {
 		}
 	}
 	return true
+}
+
+func differenceNetworks(a, b []interface{}) []string {
+	mb := map[string]bool{}
+	for _, x := range b {
+		mb[x.(string)] = true
+	}
+	ab := []string{}
+	for _, x := range a {
+		if _, ok := mb[x.(string)]; !ok {
+			ab = append(ab, x.(string))
+		}
+	}
+	return ab
 }

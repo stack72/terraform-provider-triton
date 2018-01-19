@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"net/http"
+
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -246,7 +248,7 @@ func testCheckTritonMachineDestroy(s *terraform.State) error {
 			ID: rs.Primary.ID,
 		})
 		if err != nil {
-			if errors.IsResourceNotFound(err) {
+			if errors.IsSpecificStatusCode(err, http.StatusNotFound) || errors.IsSpecificStatusCode(err, http.StatusGone) {
 				return nil
 			}
 			return err
@@ -722,6 +724,10 @@ resource "triton_fabric" "test" {
 	resolvers = ["8.8.8.8", "8.8.4.4"]
 }
 
+data "triton_network" "public" {
+    name = "Joyent-SDC-Public"
+}
+
 data "triton_image" "base" {
 	name = "base-64-lts"
 	version = "16.4.1"
@@ -737,7 +743,7 @@ resource "triton_machine" "test" {
 		test = "Test"
 	}
 
-	networks = ["${triton_fabric.test.id}"]
+	networks = ["${data.triton_network.public.id}"]
 }`, vlanNumber, name, name, subnetNumber, subnetNumber, subnetNumber, subnetNumber, name)
 }
 
@@ -793,7 +799,7 @@ resource "triton_machine" "test" {
 		test = "Test"
 	}
 
-	networks = ["${triton_fabric.test.id}", "${triton_fabric.test_add.id}", "${data.triton_network.public.id}"]
+	networks = ["${data.triton_network.public.id}", "${triton_fabric.test.id}", "${triton_fabric.test_add.id}"]
 }`, vlanNumber, name, name, subnetNumber, subnetNumber, subnetNumber, subnetNumber, name, subnetNumber, subnetNumber, subnetNumber, subnetNumber, name)
 }
 
@@ -802,6 +808,10 @@ var testAccTritonMachine_dualNIC = func(name string, vlanNumber, subnetNumber in
 	  vlan_id = %d
 	  name = "%s-vlan"
 	  description = "test vlan"
+}
+
+data "triton_network" "public" {
+    name = "Joyent-SDC-Public"
 }
 
 resource "triton_fabric" "test" {
@@ -845,7 +855,7 @@ resource "triton_machine" "test" {
 		test = "Test"
 	}
 
-	networks = ["${triton_fabric.test.id}", "${triton_fabric.test_add.id}"]
+	networks = ["${data.triton_network.public.id}", "${triton_fabric.test.id}"]
 }`, vlanNumber, name, name, subnetNumber, subnetNumber, subnetNumber, subnetNumber, name, subnetNumber, subnetNumber, subnetNumber, subnetNumber, name)
 }
 
