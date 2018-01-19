@@ -21,7 +21,6 @@ func init() {
 		Name: "triton_machine",
 		F:    testSweepMachines,
 	})
-
 }
 
 func testSweepMachines(region string) error {
@@ -40,7 +39,7 @@ func testSweepMachines(region string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Found %d instances to sweep", len(instances))
+	log.Printf("[DEBUG] Found %d instances", len(instances))
 
 	for _, v := range instances {
 		if strings.HasPrefix(v.Name, "acctest-") {
@@ -434,10 +433,16 @@ func TestAccTritonMachine_locality(t *testing.T) {
 }
 
 var testAccTritonMachine_basic = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-general-4G"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   tags = {
 	test = "hello!"
@@ -446,10 +451,16 @@ resource "triton_machine" "test" {
 `
 
 var testAccTritonMachine_affinity = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test-1" {
   name = "%s-1"
   package = "g4-general-4G"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   tags = {
 	service = "one"
@@ -459,7 +470,7 @@ resource "triton_machine" "test-1" {
 resource "triton_machine" "test-2" {
   name = "%s-2"
   package = "g4-general-4G"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   affinity = ["service!=one"]
 
@@ -470,29 +481,47 @@ resource "triton_machine" "test-2" {
 `
 
 var testAccTritonMachine_firewall_0 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-general-4G"
-  image = "c20b4b7c-e1a6-11e5-9a4d-ef590901732e"
+  image = "${data.triton_image.base.id}"
 
 	firewall_enabled = 0
 }
 `
 var testAccTritonMachine_firewall_1 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-general-4G"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
 	firewall_enabled = 1
 }
 `
 
 var testAccTritonMachine_metadata_1 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-general-4G"
-  image = "c20b4b7c-e1a6-11e5-9a4d-ef590901732e"
+  image = "${data.triton_image.base.id}"
 
   user_data = "hello"
 
@@ -507,10 +536,17 @@ variable "tags" {
 	test = "hello!"
   }
 }
+
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   user_data = "hello"
 
@@ -518,10 +554,16 @@ resource "triton_machine" "test" {
 }
 `
 var testAccTritonMachine_metadata_3 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   user_data = "hello"
 
@@ -531,10 +573,16 @@ resource "triton_machine" "test" {
 }
 `
 var testAccTritonMachine_metadata_4 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   user_data = "hello"
 
@@ -548,10 +596,16 @@ resource "triton_machine" "test" {
 }
 `
 var testAccTritonMachine_metadata_5 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   user_data = "hello"
 
@@ -565,10 +619,16 @@ resource "triton_machine" "test" {
 }
 `
 var testAccTritonMachine_cns_1 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   cns {
 	services = ["frontend"]
@@ -576,10 +636,16 @@ resource "triton_machine" "test" {
 }
 `
 var testAccTritonMachine_cns_2 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   cns {
 	services = ["frontend", "web"]
@@ -587,10 +653,16 @@ resource "triton_machine" "test" {
 }
 `
 var testAccTritonMachine_cns_3 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   cns {
 	disable = true
@@ -600,22 +672,28 @@ resource "triton_machine" "test" {
 `
 
 var testAccTritonMachine_locality_1 = `
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test1" {
   name = "%s-1"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 }
 
 resource "triton_machine" "test2" {
   name = "%s-2"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 }
 
 resource "triton_machine" "test3" {
   name = "%s-3"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 
   locality {
 	far_from = ["${triton_machine.test1.id}"]
@@ -644,10 +722,16 @@ resource "triton_fabric" "test" {
 	resolvers = ["8.8.8.8", "8.8.4.4"]
 }
 
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
 	name = "%s-instance"
 	package = "g4-highcpu-128M"
-	image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+	image = "${data.triton_image.base.id}"
 
 	tags = {
 		test = "Test"
@@ -694,10 +778,16 @@ resource "triton_fabric" "test_add" {
 	resolvers = ["8.8.8.8", "8.8.4.4"]
 }
 
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
 	name = "%s-instance"
 	package = "g4-highcpu-128M"
-	image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+	image = "${data.triton_image.base.id}"
 
 	tags = {
 		test = "Test"
@@ -740,10 +830,16 @@ resource "triton_fabric" "test_add" {
 	resolvers = ["8.8.8.8", "8.8.4.4"]
 }
 
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
+}
+
 resource "triton_machine" "test" {
 	name = "%s-instance"
 	package = "g4-highcpu-128M"
-	image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+	image = "${data.triton_image.base.id}"
 
 	tags = {
 		test = "Test"
@@ -754,13 +850,16 @@ resource "triton_machine" "test" {
 }
 
 var testAccTritonMachine_dns = `
-provider "triton" {
+data "triton_image" "base" {
+	name = "base-64-lts"
+	version = "16.4.1"
+	most_recent = true
 }
 
 resource "triton_machine" "test" {
   name = "%s"
   package = "g4-highcpu-128M"
-  image = "fb5fe970-e6e4-11e6-9820-4b51be190db9"
+  image = "${data.triton_image.base.id}"
 }
 
 output "domain_names" {
