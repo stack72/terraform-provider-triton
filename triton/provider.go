@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -15,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	triton "github.com/joyent/triton-go"
 	"github.com/joyent/triton-go/authentication"
-	"github.com/joyent/triton-go/compute"
+	terrors "github.com/joyent/triton-go/errors"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -197,7 +198,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 func resourceExists(resource interface{}, err error) (bool, error) {
 	if err != nil {
-		if compute.IsResourceNotFound(err) {
+		if terrors.IsSpecificStatusCode(err, http.StatusNotFound) || terrors.IsSpecificStatusCode(err, http.StatusGone) {
 			return false, nil
 		}
 

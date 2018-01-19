@@ -3,17 +3,17 @@ package triton
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
-
-	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/joyent/triton-go/compute"
+	"github.com/joyent/triton-go/errors"
 )
 
 func init() {
@@ -246,7 +246,7 @@ func testCheckTritonMachineDestroy(s *terraform.State) error {
 			ID: rs.Primary.ID,
 		})
 		if err != nil {
-			if compute.IsResourceNotFound(err) {
+			if errors.IsResourceNotFound(err) {
 				return nil
 			}
 			return err

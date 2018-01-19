@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/joyent/triton-go/compute"
+	"github.com/joyent/triton-go/errors"
 	"github.com/mitchellh/hashstructure"
 )
 
@@ -435,6 +437,11 @@ func resourceMachineRead(d *schema.ResourceData, meta interface{}) error {
 		ID: d.Id(),
 	})
 	if err != nil {
+		if errors.IsSpecificStatusCode(err, http.StatusNotFound) || errors.IsSpecificStatusCode(err, http.StatusGone) {
+			log.Printf("Instance %q not found or has been deleted", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -746,7 +753,7 @@ func resourceMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 
 					log.Printf("[DEBUG] Removing NIC with MacId %s", macId)
-					_, err := retryOnError(compute.IsResourceFound, func() (interface{}, error) {
+					_, err := retryOnError(errors.IsResourceFound, func() (interface{}, error) {
 						err := c.Instances().RemoveNIC(context.Background(), &compute.RemoveNICInput{
 							InstanceID: d.Id(),
 							MAC:        macId,
@@ -770,7 +777,7 @@ func resourceMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 				if !exists {
 
 					log.Printf("[DEBUG] Adding NIC with Network %s", new.(string))
-					_, err := retryOnError(compute.IsResourceFound, func() (interface{}, error) {
+					_, err := retryOnError(errors.IsResourceFound, func() (interface{}, error) {
 						_, err := c.Instances().AddNIC(context.Background(), &compute.AddNICInput{
 							InstanceID: d.Id(),
 							Network:    new.(string),
@@ -887,7 +894,7 @@ func resourceMachineDelete(d *schema.ResourceData, meta interface{}) error {
 				ID: d.Id(),
 			})
 			if err != nil {
-				if compute.IsResourceNotFound(err) {
+				if errors.IsResourceNotFound(err) {
 					return inst, "deleted", nil
 				}
 				return nil, "", err
